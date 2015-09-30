@@ -3,6 +3,7 @@ async    = require "async"
 logger   = require "logger-sharelatex"
 ProjectEntityHandler = require "../Project/ProjectEntityHandler"
 FileStoreHandler = require("../FileStore/FileStoreHandler")
+CompileController = require "../Compile/CompileController"
 Project = require("../../models/Project").Project
 
 module.exports = ProjectZipStreamManager =
@@ -46,7 +47,10 @@ module.exports = ProjectZipStreamManager =
 			@addAllFilesToArchive project_id, archive, (error) =>
 				if error?
 					logger.error err: error, project_id: project_id, "error adding files to zip stream"
-				archive.finalize()
+				@addOutputFilesToArchive project_id, archive, (error) =>
+					if error?
+						logger.error err: error, project_id: project_id, "error adding output files to zip stream"
+					archive.finalize()
 	
 
 	addAllDocsToArchive: (project_id, archive, callback = (error) ->) ->
@@ -78,3 +82,10 @@ module.exports = ProjectZipStreamManager =
 							stream.on "end", () ->
 								callback()
 			async.parallelLimit jobs, 5, callback
+
+	addOutputFilesToArchive: (project_id, archive, callback = (error) ->) ->
+		CompileController.getClsiStream project_id, {format: 'tar'}, (error, tarStream) ->
+			return callback(error) if error?
+			archive.append tarStream, name: "output.tar.gz"
+			tarStream.on "end", () ->
+				callback()
