@@ -1,4 +1,6 @@
 archiver = require "archiver"
+tar      = require "tar-stream"
+gunzip   = require "gunzip-maybe"
 async    = require "async"
 logger   = require "logger-sharelatex"
 ProjectEntityHandler = require "../Project/ProjectEntityHandler"
@@ -86,6 +88,17 @@ module.exports = ProjectZipStreamManager =
 	addOutputFilesToArchive: (project_id, archive, callback = (error) ->) ->
 		CompileController.getClsiStream project_id, {format: 'tar'}, (error, tarStream) ->
 			return callback(error) if error?
-			archive.append tarStream, name: "output.tar.gz"
-			tarStream.on "end", () ->
+			logger.log {project_id}, "streaming tar file from CLSI"
+			extract = tar.extract()
+			extract.on "entry", (header, stream, cb) ->
+				# header is the tar header
+				# stream is the content body (might be an empty stream)
+				# call cb when you are done with this entry
+				logger.log {project_id, name: header.name}, "adding tar file entry"
+				archive.append stream, name: header.name
+				stream.on "end", () ->
+					cb() # ready for next entry
+			extract.on "finish", () ->
+				logger.log {project_id}, "end of tar file"
 				callback()
+			tarStream.pipe(gunzip()).pipe(extract)
