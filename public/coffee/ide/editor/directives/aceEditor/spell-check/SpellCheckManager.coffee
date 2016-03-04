@@ -4,6 +4,14 @@ define [
 ], (HighlightedWordManager) ->
 	Range = ace.require("ace/range").Range
 
+	CommonWords = {}
+	WordList = [ 'the', 'of', 'to', 'and', 'a', 'is', 'in', 'for',
+	'that', 'be', 'The', 'are', 'with', 'as', 'on', 'can', 'this', 'by',
+	'an', 'we', 'it', 'will', 'A', 'or', 'at', 'which', 'This', 'from',
+	'have', 'not', 'was', 'used', 'data']
+	for word in WordList
+		CommonWords["en:#{word}"] = true
+
 	class SpellCheckManager
 		constructor: (@$scope, @editor, @element, @cache) ->
 			$(document.body).append @element.find(".spell-check-menu")
@@ -155,7 +163,7 @@ define [
 			# newWords/newPositions not in the cache
 			for word, i in words
 				key = "#{language}:#{word}"
-				seen[key] ?= @cache.get(key) # avoid hitting the cache unnecessarily
+				seen[key] ?= CommonWords[key] || @cache.get(key) # avoid hitting the cache unnecessarily
 				cached = seen[key]
 				if not cached?
 					newWords.push words[i]
