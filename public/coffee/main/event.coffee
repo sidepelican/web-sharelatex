@@ -11,6 +11,19 @@ define [
 		}
 
 
+	App.directive "track", () ->
+		return {
+			restrict: "A"
+			scope: false,
+			link: (scope, el, attrs) ->
+				evName  = attrs.track
+				evValue = attrs.trackValue
+
+				if (evName)
+					el.on 'click', () ->
+						console.log evName, evValue
+		}
+
 	#header
 	$('.navbar a').on "click", (e)->
 		href = $(e.target).attr("href")
