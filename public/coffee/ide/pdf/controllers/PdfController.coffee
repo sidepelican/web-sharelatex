@@ -267,9 +267,9 @@ define [
 			return path
 
 		$scope.recompile = (options = {}) ->
-			event_tracking.sendCountly "editor-recompile", options
-
 			return if $scope.pdf.compiling
+
+			event_tracking.sendCountlyTimedStart "editor-recompile"
 
 			$scope.pdf.compiling = true
 
@@ -279,10 +279,16 @@ define [
 
 			sendCompileRequest(options)
 				.success (data) ->
+					options.error = false
+					event_tracking.sendCountlyTimedEnd "editor-recompile", options
+
 					$scope.pdf.view = "pdf"
 					$scope.pdf.compiling = false
 					parseCompileResponse(data)
 				.error () ->
+					options.error = true
+					event_tracking.sendCountlyTimedEnd "editor-recompile", options
+
 					$scope.pdf.compiling = false
 					$scope.pdf.renderingError = false
 					$scope.pdf.error = true
