@@ -9,8 +9,18 @@ define [
 
 			sendCountly: (key, segmentation) ->
 				eventData = { key }
-				eventData.segmentation = segmentation if segmentation?				
-				Countly?.q.push([ "add_event", eventData ]);
+				eventData.segmentation = segmentation if segmentation?
+
+				Countly?.q.push [ "add_event", eventData ]
+
+			sendCountlyTimedStart: (key) ->
+				Countly?.q.push [ "start_event", key ]
+
+			sendCountlyTimedEnd: (key, segmentation) ->
+				eventData = { key }
+				eventData.segmentation = segmentation if segmentation?
+
+				Countly?.q.push [ "end_event", eventData ]
 		}
 
 	# App.directive "countlyTrack", () ->
