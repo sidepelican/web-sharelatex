@@ -93,7 +93,8 @@ var c_cppHighlightRules = function() {
         "constant.language": builtinConstants
     }, "identifier");
 
-    var identifierRe = "[a-zA-Z\\$_\u00a1-\uffff][a-zA-Z\d\\$_\u00a1-\uffff]*\\b";
+    var identifierRe = "[a-zA-Z\\$_\u00a1-\uffff][a-zA-Z\\d\\$_\u00a1-\uffff]*\\b";
+    var escapeRe = /\\(?:['"?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F\d]{2}|u[a-fA-F\d]{4}U[a-fA-F\d]{8}|.)/.source;
 
     this.$rules = { 
         "start" : [
@@ -112,19 +113,27 @@ var c_cppHighlightRules = function() {
                 regex : "\\/\\*",
                 next : "comment"
             }, {
-                token : "string", // single line
-                regex : '["](?:(?:\\\\.)|(?:[^"\\\\]))*?["]'
+                token : "string", // character
+                regex : "'(?:" + escapeRe + "|.)?'"
             }, {
-                token : "string", // multi line string start
-                regex : '["].*\\\\$',
-                next : "qqstring"
+                token : "string.start",
+                regex : '"', 
+                stateName: "qqstring",
+                next: [
+                    { token: "string", regex: /\\\s*$/, next: "qqstring" },
+                    { token: "constant.language.escape", regex: escapeRe },
+                    { token: "constant.language.escape", regex: /%[^'"\\]/ },
+                    { token: "string.end", regex: '"|$', next: "start" },
+                    { defaultToken: "string"}
+                ]
             }, {
-                token : "string", // single line
-                regex : "['](?:(?:\\\\.)|(?:[^'\\\\]))*?[']"
-            }, {
-                token : "string", // multi line string start
-                regex : "['].*\\\\$",
-                next : "qstring"
+                token : "string.start",
+                regex : 'R"\\(', 
+                stateName: "rawString",
+                next: [
+                    { token: "string.end", regex: '\\)"', next: "start" },
+                    { defaultToken: "string"}
+                ]
             }, {
                 token : "constant.numeric", // hex
                 regex : "0[xX][0-9a-fA-F]+(L|l|UL|ul|u|U|F|f|ll|LL|ull|ULL)?\\b"
@@ -143,10 +152,10 @@ var c_cppHighlightRules = function() {
                 regex : cFunctions
             }, {
                 token : keywordMapper,
-                regex : "[a-zA-Z_$][a-zA-Z0-9_$]*\\b"
+                regex : "[a-zA-Z_$][a-zA-Z0-9_$]*"
             }, {
                 token : "keyword.operator",
-                regex : "!|\\$|%|&|\\*|\\-\\-|\\-|\\+\\+|\\+|~|==|=|!=|<=|>=|<<=|>>=|>>>=|<>|<|>|!|&&|\\|\\||\\?\\:|\\*=|%=|\\+=|\\-=|&=|\\^=|\\b(?:in|new|delete|typeof|void)"
+                regex : /--|\+\+|<<=|>>=|>>>=|<>|&&|\|\||\?:|[*%\/+\-&\^|~!<>=]=?/
             }, {
               token : "punctuation.operator",
               regex : "\\?|\\:|\\,|\\;|\\."
@@ -184,24 +193,6 @@ var c_cppHighlightRules = function() {
                 defaultToken: "comment"
             }
         ],
-        "qqstring" : [
-            {
-                token : "string",
-                regex : '(?:(?:\\\\.)|(?:[^"\\\\]))*?"',
-                next : "start"
-            }, {
-                defaultToken : "string"
-            }
-        ],
-        "qstring" : [
-            {
-                token : "string",
-                regex : "(?:(?:\\\\.)|(?:[^'\\\\]))*?'",
-                next : "start"
-            }, {
-                defaultToken : "string"
-            }
-        ],
         "directive" : [
             {
                 token : "constant.other.multiline",
@@ -236,6 +227,7 @@ var c_cppHighlightRules = function() {
 
     this.embedRules(DocCommentHighlightRules, "doc-",
         [ DocCommentHighlightRules.getEndRule("start") ]);
+    this.normalizeRules();
 };
 
 oop.inherits(c_cppHighlightRules, TextHighlightRules);
@@ -464,7 +456,7 @@ var ObjectiveCHighlightRules = function() {
     "bracketed_content": [
         {
             token: "punctuation.section.scope.end.objc",
-            regex: "\]",
+            regex: "]",
             next: "start"
         },
         {
@@ -474,14 +466,14 @@ var ObjectiveCHighlightRules = function() {
         },
         {
             token: "support.function.any-method.objc",
-            regex: "\\w+(?::|(?=\]))",
+            regex: "\\w+(?::|(?=]))",
             next: "start"
         }
     ],
     "bracketed_strings": [
         {
             token: "punctuation.section.scope.end.objc",
-            regex: "\]",
+            regex: "]",
             next: "start"
         },
         {
@@ -490,7 +482,7 @@ var ObjectiveCHighlightRules = function() {
         },
         {
             token: ["invalid.illegal.unknown-method.objc", "punctuation.separator.arguments.objc"],
-            regex: "\\b(\w+)(:)"
+            regex: "\\b(\\w+)(:)"
         },
         {
             regex: "\\b(?:ALL|ANY|SOME|NONE)\\b",
