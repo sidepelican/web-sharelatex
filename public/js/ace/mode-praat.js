@@ -223,7 +223,7 @@ var PraatHighlightRules = function() {
                 regex : /"/,
                 next : "start"
             }
-        ],
+        ]
     };
 };
 
@@ -444,7 +444,7 @@ oop.inherits(Mode, TextMode);
         }
 
         if (state == "start") {
-            var match = line.match(/^.*[\{\(\[\:]\s*$/);
+            var match = line.match(/^.*[\{\(\[:]\s*$/);
             if (match) {
                 indent += tab;
             }
