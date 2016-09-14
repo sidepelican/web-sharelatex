@@ -50,7 +50,7 @@ UserAndProjectPopulator.coffee
 public/js/history/versiondetail.js
 !public/js/libs/
 public/js/*
-!public/js/ace/*
+!public/js/ace/
 !public/js/libs/
 public/js/libs/sharejs.js
 public/js/editor.js
