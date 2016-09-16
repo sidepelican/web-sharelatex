@@ -331,7 +331,7 @@ defaultSettingsForAnonymousUser = (user_id)->
 
 THEME_LIST = []
 do generateThemeList = () ->
-	files = fs.readdirSync __dirname + '/../../../../public/js/ace'
+	files = fs.readdirSync __dirname + '/../../../../public/js/ace-1.2.5'
 	for file in files
 		if file.slice(-2) == "js" and file.match(/^theme-/)
 			cleanName = file.slice(0,-3).slice(6)
